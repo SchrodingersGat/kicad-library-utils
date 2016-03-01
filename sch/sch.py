@@ -2,6 +2,11 @@
 
 import sys, shlex
 
+F_REFERENCE = 0
+F_VALUE = 1
+F_FOOTPRINT = 2
+F_DATASHEET = 3
+
 class Description(object):
     """
     A class to parse description information of Schematic Files Format of the KiCad
@@ -21,6 +26,7 @@ class Component(object):
     _F_KEYS = ['id', 'ref', 'orient', 'posx', 'posy', 'size', 'attributs', 'hjust', 'props', 'name']
 
     _KEYS = {'L':_L_KEYS, 'U':_U_KEYS, 'P':_P_KEYS, 'AR':_AR_KEYS, 'F':_F_KEYS}
+	
     def __init__(self, data):
         self.labels = {}
         self.unit = {}
@@ -57,6 +63,68 @@ class Component(object):
             elif line[0] == 'F':
                 self.fields.append(dict(zip(key_list,values)))
 
+    #compare a component against another component
+    #e.g. for BoM purposes
+    #components are the 'same' if the following fields are identical;
+    #Prefix
+    #Value
+    #Footprint
+    #
+    def compare(self, other):
+        if other == None: return False
+        if not type(other) == type(self): return False
+
+        if not other.getPrefix() == self.getPrefix(): return False
+
+        if not other.getValue() == self.getValue(): return False
+
+        if not other.getFootprint() == self.getFootprint(): return False
+
+        #all matches complete
+        return True
+
+    def getFieldData(self, f):
+        if not f.has_key('ref'): return ""
+        return f['ref'].replace('"','')
+				
+    def getFieldByIndex(self, i):
+        if (len(self.fields) <= i): return None
+        return self.getFieldData(self.fields[i])
+                            
+    def getReference(self):
+        return self.getFieldByIndex(F_REFERENCE)
+		
+    def getPrefix(self):
+        return "".join([x for x in self.getReference() if x.isalpha()])
+    
+    def getValue(self):
+        return self.getFieldByIndex(F_VALUE)
+            
+    def getFootprint(self):
+        return self.getFieldByIndex(F_FOOTPRINT)
+            
+    def getDatasheet(self):
+        return self.getFieldByIndex(F_DATASHEET)
+
+    #return True if 'intesting', False otherwise
+    def isInteresting(self):
+        if self.getReference() == None: return False
+        if ("#PWR" in self.getReference()): return False
+        if ("PWR_FLAG" in self.getReference()): return False
+
+        return True
+
+    def getFieldByName(self, name):
+            
+        for f in self.fields:
+                
+            if not f.has_key("name"): continue
+            
+            if f["name"].replace('"','') == name:
+                return self.getFieldData(f)
+                
+        return None
+		
     # TODO: error checking
     # * check if field_data is a dictionary
     # * check if at least 'ref' and 'name' were passed
