@@ -175,6 +175,16 @@ class Sheet(object):
                 values = line + ['' for n in range(len(key_list) - len(line))]
                 self.fields.append(dict(zip(key_list,values)))
 
+    def getFilename(self):
+        #sheet filename is field 1
+        if len(self.fields) <= 1: return None
+
+        f = self.fields[1]
+
+        if not f.has_key("value"): return None
+
+        return f["value"].replace('"','')
+
 class Bitmap(object):
     """
     A class to parse bitmaps of Schematic Files Format of the KiCad
