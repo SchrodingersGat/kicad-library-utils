@@ -16,27 +16,49 @@ class Rule(KLCRule):
             * only_datasheet_missing
         """
 
-        self.only_datasheet_missing = False
+        self.only_datasheet_missing=False #unused, remove?
 
-        if not self.component.documentation: return True
+        invalid_documentation=0
+        #check part itself
+        if self.checkDocumentation(self.component.documentation): invalid_documentation+=1
 
-        if (not self.component.documentation['description'] or
-            not self.component.documentation['keywords'] or
-            not self.component.documentation['datasheet']):
+        #check all its aliases too
+        if self.component.aliases:
+            for alias in self.component.aliases.keys():
+                self.verboseOut(Verbosity.HIGH,Severity.INFO,"checking alias: {0}".format(alias))
+                if self.checkDocumentation(self.component.aliases[alias], indentation=2):
+                    invalid_documentation+=1
 
-            if (self.component.documentation['description'] and
-                self.component.documentation['keywords'] and
-                not self.component.documentation['datasheet']):
-                self.only_datasheet_missing = True
+        return True if invalid_documentation>0 else False
 
+
+    def checkDocumentation(self, documentation, indentation=0):
+        if not documentation:
+            self.verboseOut(Verbosity.HIGH,Severity.ERROR," "*indentation+"missing whole documentation (description, keywords, datasheet)")
             return True
 
-        return False
+        elif (not documentation['description'] or
+            not documentation['keywords'] or
+            not documentation['datasheet']):
+
+            if (not documentation['description']):
+                self.verboseOut(Verbosity.HIGH,Severity.ERROR," "*indentation+"missing description")
+            if (not documentation['keywords']):
+                self.verboseOut(Verbosity.HIGH,Severity.ERROR," "*indentation+"missing keywords")
+            if (not documentation['datasheet']):
+                self.verboseOut(Verbosity.HIGH,Severity.WARNING," "*indentation+"missing datasheet, please provide a datasheet link if it isn't a generic component")
+                if (documentation['description'] and
+                    documentation['keywords']):
+                    self.only_datasheet_missing=True
+            return True
+
+        else:
+            self.verboseOut(Verbosity.HIGH,Severity.SUCCESS," "*indentation+"documentation OK")
+            return False
+
 
     def fix(self):
         """
         Proceeds the fixing of the rule, if possible.
         """
-        if self.check():
-            # Can't fix that!
-            pass
+        self.verboseOut(Verbosity.NORMAL, Severity.INFO, "FIX: not supported" )
