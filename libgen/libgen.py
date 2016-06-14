@@ -1,5 +1,38 @@
-import os
+import os, sys
 
+path_to_schlib = os.path.abspath(os.path.join(sys.argv[0],"..","..","schlib"))
+sys.path.append(path_to_schlib)
+import schlib
+
+
+class Field:
+    def __init__(self, number, text, name="", **kwargs):
+        self.number = number
+        self.text = text
+        self.name = name
+        
+        self.pos_x = kwargs.get('posx',0)
+        self.pos_y = kwargs.get('posy',0)
+        self.size = kwargs.get('text_size',50)
+        self.orient = kwargs.get('text_orient','H')
+        self.visibility = kwargs.get('visibility','V')
+        self.hjust = kwargs.get('htext_justify','C')
+        self.vjust = kwargs.get('vtext_justify','CNN')
+        
+    def toString(self):
+        return 'F{n} "{txt}" {x} {y} {sz} {o} {v} {hj} {vj}{name}'.format(
+            n = self.number,
+            txt = self.text,
+            x = self.pos_x,
+            y = self.pos_x,
+            sz = self.size,
+            o = self.orient,
+            v = self.visibility,
+            hj = self.hjust,
+            vj = self.vjust,
+            name = "" if self.name == "" else " " + self.name
+            )
+        
 #component description
 class Description:
     
@@ -22,6 +55,14 @@ class Description:
         cmp.append("$ENDCMP" + lf)
         
         return lf.join(cmp)
+        
+    def alias(self, name):
+        if name == self.name:
+            return self
+            
+        d = Description(name, description=self.description, keywords=self.keywords, datasheet=self.datasheet)
+            
+        return d
             
 class Component:
     def __init__(self, description, **kwargs):
@@ -33,7 +74,13 @@ class Component:
         self.aliases = []
         self.kwargs = kwargs
         self.fplist = []
+        self.fields = []
         self.footprint = kwargs.get('footrint',None)
+       
+        self.ref_text = Field(0, self.designator)
+        self.title_text = Field(1,description.name)
+        self.fp_text = Field(2,kwargs.get("footprint",""))
+        self.ds_text = Field(3,kwargs.get("datasheet",""))
         
     def addAlias(self, alias):
         if type(alias) is not Description:
@@ -67,8 +114,11 @@ class Component:
             locked = self.kwargs.get('units_locked','F'),
             option = self.kwargs.get('option','N')))
         
-        #Reference
-        #cmp.append('F0 "{ref}" {x} {y} {size} {v} {c} {)
+        #Text fields
+        cmp.append(self.ref_text.toString())
+        cmp.append(self.title_text.toString())
+        cmp.append(self.fp_text.toString())
+        cmp.append(self.ds_text.toString())
         
         #aliases
         if len(self.aliases) > 0:
