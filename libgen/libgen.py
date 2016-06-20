@@ -3,8 +3,9 @@ import os, sys
 path_to_schlib = os.path.abspath(os.path.join(sys.argv[0],"..","..","schlib"))
 sys.path.append(path_to_schlib)
 import schlib
+from kicad_defs import *
 
-
+#component field
 class Field:
     def __init__(self, number, text, name="", **kwargs):
         self.number = number
@@ -32,6 +33,49 @@ class Field:
             vj = self.vjust,
             name = "" if self.name == "" else " " + self.name
             )
+            
+            
+            
+class Pin:
+    def __init__(self, name, number, **kwargs):
+        
+        self.name = name
+        self.number = number
+        
+        #extract other information
+        #position
+        self.x_pos = kwargs.get("x_pos",0)
+        self.y_pos = kwargs.get("y_pos",0)
+        
+        #length
+        self.pin_length = kwargs.get("pin_length",200)
+        
+        #text size
+        self.name_size = kwargs.get("name_size",50)
+        self.number_size = kwargs.get("number_size", 50)
+        
+        self.pin_type = kwargs.get("pin_type","I") #INPUT is default
+        if not self.pin_type in KICAD_PIN_TYPES:
+            self.pin_type = "I"
+            
+        self.pin_dir = kwargs.get("pin_dir","L") #Left by default
+        if not self.pin_dir in KICAD_PIN_DIRS:
+            self.pin_type = "L"
+            
+        self.pin_style = kwargs.get("pin_style","")
+        if not self.pin_style in KICAD_PIN_STYLES:
+            self.pin_style = ""
+                
+    def toString(self):
+        return "X {name} {num} {length} {orient} {length} {num_size} {nam_size} {pin_type} {pin_style}".format(
+            name = self.name,
+            num = self.number,
+            length = self.pin_length,
+            orient = self.pin_dir,
+            num_size = self.number_size,
+            nam_size = self.name_size,
+            pin_type = self.pin_type,
+            pin_style = self.pin_style)
         
 #component description
 class Description:
@@ -75,6 +119,7 @@ class Component:
         self.kwargs = kwargs
         self.fplist = []
         self.fields = []
+        self.pins = []
         self.footprint = kwargs.get('footrint',None)
        
         self.ref_text = Field(0, self.designator)
@@ -137,6 +182,9 @@ class Component:
         cmp.append("DRAW")
         
         #do draw
+        #draw pins
+        for pin in self.pins:
+            cmp.append(pin.toString())
         
         cmp.append("ENDDRAW")
         cmp.append("ENDDEF")
