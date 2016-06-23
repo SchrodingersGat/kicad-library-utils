@@ -37,15 +37,15 @@ class Field:
             
             
 class Pin:
-    def __init__(self, name, number, **kwargs):
+    def __init__(self, name, number, x_pos, y_pos, **kwargs):
         
         self.name = name
         self.number = number
         
         #extract other information
         #position
-        self.x_pos = kwargs.get("x_pos",0)
-        self.y_pos = kwargs.get("y_pos",0)
+        self.x_pos = x_pos
+        self.y_pos = y_pos
         
         #length
         self.pin_length = kwargs.get("pin_length",200)
@@ -65,17 +65,27 @@ class Pin:
         self.pin_style = kwargs.get("pin_style","")
         if not self.pin_style in KICAD_PIN_STYLES:
             self.pin_style = ""
+            
+        #which unit within a multi-body part
+        self.unit = kwargs.get('unit',1)
+        
+        #which body in a part with multiple representations
+        self.body = kwargs.get('body',1)
                 
     def toString(self):
-        return "X {name} {num} {length} {orient} {length} {num_size} {nam_size} {pin_type} {pin_style}".format(
+        return "X {name} {num} {x} {y} {length} {orient} {nam_size} {num_size} {unit} {body} {pin_type}{pin_style}".format(
             name = self.name,
             num = self.number,
+            x = self.x_pos,
+            y = self.y_pos,
             length = self.pin_length,
             orient = self.pin_dir,
             num_size = self.number_size,
             nam_size = self.name_size,
+            unit = self.unit,
+            body = self.body,
             pin_type = self.pin_type,
-            pin_style = self.pin_style)
+            pin_style = ' ' + self.pin_style if len(self.pin_style) > 0 else '')
         
 #component description
 class Description:
