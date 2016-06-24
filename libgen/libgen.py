@@ -1,8 +1,8 @@
 import os, sys
 
-path_to_schlib = os.path.abspath(os.path.join(sys.argv[0],"..","..","schlib"))
-sys.path.append(path_to_schlib)
-import schlib
+#path_to_schlib = os.path.abspath(os.path.join(sys.argv[0],"..","..","schlib"))
+#sys.path.append(path_to_schlib)
+#import schlib
 from kicad_defs import *
 
 #component field
@@ -34,10 +34,46 @@ class Field:
             name = "" if self.name == "" else " " + self.name
             )
             
+class DrawItem:
+    def __init__(self, **kwargs):
+        
+        self.unit = kwargs.get('unit', 1)
+        self.convert = kwargs.get('convert',1)
+        self.thickness = kwargs.get('thickness',0.01)
+        
+        self.fill = kwargs.get('fill', FILL_BACKGROUND)
+        
+        if self.fill not in FILL_TYPES:
+            self.fill = FILL_BACKGROUND
+        
+class Rectangle(DrawItem):
+    def __init__(self, startx, starty, endx, endy, **kwargs):
+    
+        DrawItem.__init__(self,**kwargs)
+    
+        self.startx = startx
+        self.starty = starty
+        
+        self.endx = endx
+        self.endy = endy
+        
+    def toString(self):
+        return "S {x1} {y1} {x2} {y2} {unit} {convert} {thickness} {fill}".format(
+            x1 = self.startx,
+            y1 = selrf.starty,
+            x2 = self.endx,
+            y2 = self.endy,
+            unit = self.unit,
+            convert = self.convert,
+            thickness = self.thickness,
+            fill = self.fill
+        )
+        
+class Pin(DrawItem):
             
-            
-class Pin:
     def __init__(self, name, number, x_pos, y_pos, **kwargs):
+        
+        DrawItem.__init__(self,**kwargs)
         
         self.name = name
         self.number = number
@@ -55,22 +91,16 @@ class Pin:
         self.number_size = kwargs.get("number_size", 50)
         
         self.pin_type = kwargs.get("pin_type","I") #INPUT is default
-        if not self.pin_type in KICAD_PIN_TYPES:
+        if not self.pin_type in PIN_TYPES:
             self.pin_type = "I"
             
         self.pin_dir = kwargs.get("pin_dir","L") #Left by default
-        if not self.pin_dir in KICAD_PIN_DIRS:
+        if not self.pin_dir in PIN_DIRS:
             self.pin_type = "L"
             
         self.pin_style = kwargs.get("pin_style","")
-        if not self.pin_style in KICAD_PIN_STYLES:
+        if not self.pin_style in PIN_STYLES:
             self.pin_style = ""
-            
-        #which unit within a multi-body part
-        self.unit = kwargs.get('unit',1)
-        
-        #which body in a part with multiple representations
-        self.body = kwargs.get('body',1)
                 
     def toString(self):
         return "X {name} {num} {x} {y} {length} {orient} {nam_size} {num_size} {unit} {body} {pin_type}{pin_style}".format(
@@ -83,7 +113,7 @@ class Pin:
             num_size = self.number_size,
             nam_size = self.name_size,
             unit = self.unit,
-            body = self.body,
+            body = self.convert,
             pin_type = self.pin_type,
             pin_style = ' ' + self.pin_style if len(self.pin_style) > 0 else '')
         
@@ -129,7 +159,7 @@ class Component:
         self.kwargs = kwargs
         self.fplist = []
         self.fields = []
-        self.pins = []
+        self.draw = []
         self.footprint = kwargs.get('footrint',None)
        
         self.ref_text = Field(0, self.designator)
@@ -153,6 +183,9 @@ class Component:
             alias.datasheet = self.description.datasheet
             
         self.aliases.append(alias)
+        
+    def addItem(self, item):
+        self.items.append(item)
         
     def toString(self, lf='\n'):
         cmp = []
@@ -192,9 +225,8 @@ class Component:
         cmp.append("DRAW")
         
         #do draw
-        #draw pins
-        for pin in self.pins:
-            cmp.append(pin.toString())
+        for item in self.draw:
+            cmp.append(item.toString())
         
         cmp.append("ENDDRAW")
         cmp.append("ENDDEF")
