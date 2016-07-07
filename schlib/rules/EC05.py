@@ -7,7 +7,7 @@ class Rule(KLCRule):
     Create the methods check and fix to use with the kicad lib files.
     """
     def __init__(self, component):
-        super(Rule, self).__init__(component, 'Rule 3.9', 'Pin numbers should not be duplicated for a symbol.')
+        super(Rule, self).__init__(component, 'EC05 - Extra Checking', 'Pin numbers should not be duplicated.')
 
     def check(self):
         """
@@ -15,28 +15,36 @@ class Rule(KLCRule):
         Determines if any symbol pins are duplicated
         """
         
-        pins = []
+        #dict of pins
+        pins = {}
+        
         duplicates = []
         
         #look for duplicate pins
         for pin in self.component.pins:
-            found = False
-            for p in pins:
-                if p['num'] == pin['num'] and not p['name'] == pin['name']:
-                    self.verboseOut(Verbosity.NORMAL, Severity.WARNING, "Pin {n} is duplicated".format(n=pin['num']))
-                    self.verboseOut(Verbosity.HIGH, Severity.INFO, "Pin '{n1}' is a duplicate of pin '{n2}'".format(
-                        n1 = pin['name'],
-                        n2 = p['name']))
-                    found = True
-                    break
-                    
-            if not found:
-                pins.append(pin)
-
+        
+            pin_number = pin['num']
+            pin_name = pin['name']
+            
+            #Check if there is already a match for this pin number
+            if pin_number in pins.keys():
+                pins[pin_number].append(pin_name)
             else:
-                duplicates.append(pin)
-           
-        return len(duplicates) > 0
+                pins[pin_number] = [pin_name]
+                
+        duplicate = False
+                
+        for number in pins.keys():
+            pin_list = pins[number]
+            
+            if len(pin_list) > 1:
+                duplicate = True
+                self.verboseOut(Verbosity.NORMAL, Severity.WARNING, "Pin {n} is duplicated".format(n=number))
+                
+                for name in pin_list:
+                    self.verboseOut(Verbosity.HIGH, Severity.ERROR, "{n} - {name}".format(n = number, name = name))
+            
+        return duplicate
 
     def fix(self):
         """
