@@ -6,7 +6,7 @@ import re
 class Rule(KLCRule):
 
     #Power Input Pins should be 'W'
-    POWER_INPUTS = ['^[ad]*g(rou)*nd$','^[ad]*v(aa|cc|dd|ss|bat|in)$','^[av]ref$']
+    POWER_INPUTS = ['^[ad]*g(rou)*nd$', '^[ad]*v(aa|cc|dd|ss|bat|in)$', '^[av]ref$']
     
     #Power Output Pins should be 'w'
     POWER_OUTPUTS = ['^vout$']
@@ -14,16 +14,16 @@ class Rule(KLCRule):
     PASSIVE_PINS = []
     
     #Input Pins should be "I"
-    INPUT_PINS = ['^sdi$','^cl(oc)*k(in)*$','^~*cs~*$',]
+    INPUT_PINS = ['^sdi$', '^cl(oc)*k(in)*$', '^~*cs~*$',]
     
     #Output pins should be "O"
-    OUTPUT_PINS = ['^sdo$','^cl(oc)*kout$']
+    OUTPUT_PINS = ['^sdo$', '^cl(oc)*kout$']
     
     #Bidirectional pins should be "B"
-    BIDIR_PINS = ['^sda$','^s*dio$',]
+    BIDIR_PINS = ['^sda$', '^s*dio$']
     
     #No-connect pins should be "N"
-    NC_PINS = ["^nc$","^dnc$"]
+    NC_PINS = ['^nc$', '^dnc$', '^n\.c\.$']
     
     tests = {
         "W" : POWER_INPUTS,
@@ -96,9 +96,9 @@ class Rule(KLCRule):
                 self.verboseOut(Verbosity.HIGH, Severity.WARNING, "pin {n} does not have a name".format(n=pin['num']))
                 
             # check if NC pins are visible
-            if self.test(pin['name'], self.NC_PINS):
-                fail = True
+            if pin['electrical_type'] == 'N':
                 if not pin['pin_type'].startswith('N'):
+                    fail = True
                     self.verboseOut(Verbosity.HIGH, Severity.WARNING, "pin {name} ({n}) is no-connect, should be set to invisible".format(n=pin['num'],name=pin['name']))
                 
         return fail
