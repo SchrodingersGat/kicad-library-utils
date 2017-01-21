@@ -35,7 +35,6 @@ def KLCCheck(component, library):
 
 printer = PrintColor(use_color = not args.nocolor)
 
-
 #grab list of libfiles (even on windows!)
 old_libs = []
 new_libs = []
