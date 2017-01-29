@@ -3,12 +3,29 @@ from __future__ import print_function
 import urllib.request as urlrequest
 import re
 import sys
+import os
 
+KLC_DIR = "C:\\kicad\\utils\\pcb"
+
+LIBS_DIR = "C:\\kicad\\share\\pretty"
 GITHUB_FP_LIB_TABLE = "https://raw.githubusercontent.com/KiCad/kicad-library/master/template/fp-lib-table.for-github"
+GITHUB_BASE = "https://www.github.com/kicad/"
 
 def Fail(msg, result=-1):
     print(msg)
     sys.exit(result)
+
+def CheckFootprint(fp):
+    if not os.path.exists(fp):
+        return true
+
+    call = 'python "{chk}" "{fp}" -s'.format(
+        chk = os.path.sep.join([KLC_DIR,'check_kicad_mod.py']),
+        fp = fp)
+
+    #print(call)
+    #sys.exit(0)
+    return os.system(call) == 0
 
 try:
     # Download the footprint-library-table
@@ -27,14 +44,35 @@ good_table = []
 deprecated_table = []
 
 def TableHeader():
-    header = "| Library | Description |\n"
-    header += "|---|---|\n"
+    header = "| Library | Description | Footprint Count |\n" # KLC Compliance |\n"
+    header += "|---|---|---|\n" #---|\n"
 
     return header
 
 def TableLine(name,url,description):
-    GITHUB_BASE = "https://www.github.com/kicad/"
-    line = "| [{name}]({url}) | {description} |".format(name=name,url=GITHUB_BASE+url,description=description)
+    
+    pretty = os.path.sep.join([LIBS_DIR, url])
+    files = os.listdir(pretty)
+    files = [f for f in files if f.endswith(".kicad_mod")]
+
+    n = len(files)
+
+    # KLC compliance
+    """
+    klc_errors = 0
+    for f in files:
+        f = os.path.sep.join([LIBS_DIR, url, f])
+        if not CheckFootprint(f):
+            klc_errors += 1
+
+    
+    percent = (n - klc_errors) / n * 100
+    """
+    line = "| [{name}]({url}) | {description} | {n} |".format(
+        name=name,
+        url=GITHUB_BASE+url,
+        description=description,
+        n=n)
 
     return line
     
