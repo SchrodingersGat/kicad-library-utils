@@ -45,7 +45,7 @@ good_table = []
 deprecated_table = []
 
 def TableHeader():
-    header = "| Library | Description | Footprint Count |\n" # KLC Compliance |\n"
+    header = "| Library | Description | Footprints |\n" # KLC Compliance |\n"
     header += "|---|---|---|\n" #---|\n"
 
     return header
@@ -98,11 +98,15 @@ for lib in libs:
         good_table.append(line)
 
 output = "## Footprint Libraries\n\n"
+output += "Footprint libraries are maintained as individual `.pretty` repositories. The tables below list the available footprint libraries."
+output += "\n\n"
 output += TableHeader()
 output += "\n".join(good_table)
 output += "\n\n"
 
 output += "## Deprecated Libraries\n\n"
+output += "The following libraries are deprecated, and are included only for legacy use. No updates will be accepted for these libraries."
+output += "\n\n"
 output += TableHeader()
 output += "\n".join(deprecated_table)
         
