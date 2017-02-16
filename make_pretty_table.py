@@ -3,6 +3,7 @@ from __future__ import print_function
 import urllib.request as urlrequest
 import re
 import sys
+import time
 import os
 
 KLC_DIR = "C:\\kicad\\utils\\pcb"
