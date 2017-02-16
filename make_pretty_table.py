@@ -3,12 +3,13 @@ from __future__ import print_function
 import urllib.request as urlrequest
 import re
 import sys
-import time
+import datetime
 import os
 
 KLC_DIR = "C:\\kicad\\utils\\pcb"
 
-LIBS_DIR = "C:\\kicad\\share\\pretty"
+LIBS_DIR = "C:\\Kicad\\pretty-libs-master"
+
 GITHUB_FP_LIB_TABLE = "https://raw.githubusercontent.com/KiCad/kicad-library/master/template/fp-lib-table.for-github"
 GITHUB_BASE = "https://www.github.com/kicad/"
 
@@ -37,7 +38,7 @@ except:
     Fail("Error loading fp-lib-table from github.")
     
 # Extract .pretty library information
-PRETTY_REGEX = 'lib \(name ([^\)]*)\)\(type Github\)\(uri \${KIGITHUB}\/([^\)]*)\)\(options "[^"]*"\)\(descr ([^\)]*)'
+PRETTY_REGEX = 'lib \(name ([^\)]*)\)\(type Github\)\(uri \${KIGITHUB}\/([^\)]*)\)\(options "[^"]*"\)\(descr "?(.*)"?\)\)'
     
 libs = lib_table_data.split("\n")
 
@@ -51,7 +52,7 @@ def TableHeader():
     return header
 
 def TableLine(name,url,description):
-    
+    print("Checking",url)
     pretty = os.path.sep.join([LIBS_DIR, url])
     files = os.listdir(pretty)
     files = [f for f in files if f.endswith(".kicad_mod")]
@@ -59,6 +60,7 @@ def TableLine(name,url,description):
     n = len(files)
 
     # KLC compliance
+    
     """
     klc_errors = 0
     for f in files:
@@ -66,8 +68,10 @@ def TableLine(name,url,description):
         if not CheckFootprint(f):
             klc_errors += 1
 
-    
-    percent = (n - klc_errors) / n * 100
+    if n == 0:
+        percent = 0
+    else:
+        percent = (n - klc_errors) / n * 100
     """
     line = "| [{name}]({url}) | {description} | {n} |".format(
         name=name,
@@ -97,6 +101,7 @@ for lib in libs:
     else:
         good_table.append(line)
 
+
 output = "## Footprint Libraries\n\n"
 output += "Footprint libraries are maintained as individual `.pretty` repositories. The tables below list the available footprint libraries."
 output += "\n\n"
@@ -109,6 +114,10 @@ output += "The following libraries are deprecated, and are included only for leg
 output += "\n\n"
 output += TableHeader()
 output += "\n".join(deprecated_table)
+
+output += "\n\n"
+
+output += "Last Updated: " + str( datetime.date.today() )
         
 with open("pretty.md","w") as pretty:
     pretty.write(output)
