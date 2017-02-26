@@ -57,7 +57,7 @@ class Documentation(object):
         checksum_data = ''
         
         for line in f.readlines():
-            checksum_data += line
+            checksum_data += line.strip()
             line = line.replace('\n', '')
             if line.startswith(Documentation.line_keys['start']):
                 name = line[5:]
@@ -149,7 +149,7 @@ class Component(object):
         self.resetDraw()
         
         for line in data:
-            checksum_data += line
+            checksum_data += line.strip()
             line = line.replace('\n', '')
             s = shlex.shlex(line)
             s.whitespace_split = True
@@ -342,7 +342,7 @@ class SchLib(object):
         comments = []
         for line in f.readlines():
         
-            checksum_data += line
+            checksum_data += line.strip()
         
             if line.startswith('#'):
                 comments.append(line)
