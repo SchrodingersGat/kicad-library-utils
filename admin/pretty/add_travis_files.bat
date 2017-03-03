@@ -2,7 +2,7 @@
 
 for /d %%i in (*.pretty) do (
     echo %%i
-    copy .travis.yml %%i
+    copy c:\kicad\utils\pcb\travis\.travis.yml %%i
     cd %%i
     git pull
     git add .travis.yml
@@ -11,5 +11,4 @@ for /d %%i in (*.pretty) do (
     git commit -m "Fixed travis CI scripts (moved .sh file to KLC repo)"
     git push
     cd ..
-    PAUSE
 )
