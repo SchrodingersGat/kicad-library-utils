@@ -34,10 +34,84 @@ class Field:
             name = "" if self.name == "" else " " + self.name
             )
             
+class Point(object):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        
+    def toString(self):
+        return "{x} {y}".format(x=self.x, y=self.y)
+
+class SchItem(object):
+
+    _FILL_FG = 'F'
+    _FILL_BG = 'f'
+    _FILL_NONE = 'N'
+    
+    def __init__(self, **kwargs):
+        #which unit within a multi-body part
+        self.unit = int(kwargs.get('unit',1))
+        
+        #which body in a part with multiple representations
+        self.body = int(kwargs.get('body',1))
+        
+        self.fill = kwargs.get('fill', self._FILL_NONE)
+        self.thickness = int(kwargs.get('thickness', 10))
+        
+class Line(SchItem):
+
+    def __init__(self, **kwargs):
+        
+        SchItem.__init__(self, **kwargs)
+        
+        self.points = kwargs.get('points',[])
+        
+    def addPoint(self, point):
+        self.points.append(point)
+        
+    def pointsToString(self):
+        output = []
+        
+        for p in self.points:
+            output.append(p.toString())
             
+        return " ".join(output)
             
-class Pin:
+    def toString(self):
+        return "P {n} {unit} {body} {thickness} {points} {fill}".format(
+            n = len(self.points),
+            unit = self.unit,
+            body = self.body,
+            thickness = self.thickness,
+            points = self.pointsToString(),
+            fill = self.fill
+        )
+        
+class Rect(SchItem):
+    def __init__(self, x, y, width, height, **kwargs):
+        SchItem.__init__(self, **kwargs)
+        
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        
+    def toString(self):
+        return "S {sx} {sy} {ex} {ey} {unit} {body} {thickness} {fill}".format(
+            sx = self.x,
+            sy = self.y,
+            ex = self.x + self.width,
+            ey = self.y + self.height,
+            unit = self.unit,
+            body = self.body,
+            thickness = self.thickness,
+            fill = self.fill
+        )
+            
+class Pin(SchItem):
     def __init__(self, name, number, x_pos, y_pos, **kwargs):
+
+        SchItem.__init__(self, **kwargs)
         
         self.name = name
         self.number = number
@@ -65,12 +139,6 @@ class Pin:
         self.pin_style = kwargs.get("pin_style","")
         if not self.pin_style in KICAD_PIN_STYLES:
             self.pin_style = ""
-            
-        #which unit within a multi-body part
-        self.unit = kwargs.get('unit',1)
-        
-        #which body in a part with multiple representations
-        self.body = kwargs.get('body',1)
                 
     def toString(self):
         return "X {name} {num} {x} {y} {length} {orient} {nam_size} {num_size} {unit} {body} {pin_type}{pin_style}".format(
@@ -129,13 +197,19 @@ class Component:
         self.kwargs = kwargs
         self.fplist = []
         self.fields = []
-        self.pins = []
+        self.graphics = []
         self.footprint = kwargs.get('footrint',None)
        
         self.ref_text = Field(0, self.designator)
         self.title_text = Field(1,description.name)
         self.fp_text = Field(2,kwargs.get("footprint",""))
         self.ds_text = Field(3,kwargs.get("datasheet",""))
+
+    def addItem(self, item):
+        self.graphics.append(item)
+
+    def addFilter(self, fpFilter):
+        self.fplist.append(fpFilter)
         
     def addAlias(self, alias):
         if type(alias) is not Description:
@@ -192,9 +266,9 @@ class Component:
         cmp.append("DRAW")
         
         #do draw
-        #draw pins
-        for pin in self.pins:
-            cmp.append(pin.toString())
+        #draw graphic items
+        for g in self.graphics:
+            cmp.append(g.toString())
         
         cmp.append("ENDDRAW")
         cmp.append("ENDDEF")
