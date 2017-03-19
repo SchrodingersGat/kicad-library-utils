@@ -5,4 +5,5 @@ for change in $(git diff --name-only --diff-filter=AM $TRAVIS_COMMIT_RANGE); do
     echo "Checking: $change"
     python3 $SCRIPT "/$1/$change" -vv
     error="$(($error+$?))"
+done
 exit $error
