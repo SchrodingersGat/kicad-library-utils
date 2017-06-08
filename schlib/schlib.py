@@ -59,8 +59,9 @@ class Documentation(object):
         for line in f.readlines():
             checksum_data += line.strip()
             line = line.replace('\n', '')
+            line = line.replace('\r', '')
             if line.startswith(Documentation.line_keys['start']):
-                name = line[5:]
+                name = line[5:].strip()
                 keywords = None
                 description = None
                 datasheet = None
@@ -248,7 +249,10 @@ class Component(object):
 
     def getDocumentation(self,documentation,name):
         try:
-            return documentation.components[name]
+            if name.startswith('~'):
+                return documentation.components[name[1:(len(name))] ]
+            else:
+                return documentation.components[name]
         except KeyError:
             return {}
 
@@ -277,6 +281,20 @@ class Component(object):
                 pins.append(pin)
 
         return pins
+
+    def isNonBOMSymbol(self):
+        return self.reference.startswith('#')
+
+    def isPowerSymbol(self):
+        return (self.reference=='#PWR') and (len(self.pins)==1) and (self.pins[0]['electrical_type'].lower()=='w')
+    
+    def isPossiblyPowerSymbol(self):
+        return (self.reference=='#PWR') 
+
+    def isGraphicSymbol(self):
+        return self.isNonBOMSymbol() and len(self.pins)==0
+
+
 
 
 class SchLib(object):
