@@ -33,8 +33,8 @@ parser.add_argument('-l', '--libs', action='store', help='Symbol libraries (.lib
 parser.add_argument('-p', '--pretty', action='store', help='Footprint libraries (.pretty dirs)', nargs='+')
 parser.add_argument('-j', '--json', action='store', help='JSON remapping file')
 parser.add_argument('-i', '--interactive', action='store_true', help='Run interactive mode')
-parser.add_argument('-r', '--real', action='store', help='Run output (dry-run unless specified)')
-parser.add_argument('-f', '--force', action='store', help='Force override even if current association is OK')
+parser.add_argument('-r', '--real', action='store_true', help='Run output (dry-run unless specified)')
+parser.add_argument('-f', '--force', action='store_true', help='Force override even if current association is OK')
 parser.add_argument('-v', '--verbose', action='count', help='Print extra debugging information')
 
 args = parser.parse_args()
@@ -73,6 +73,7 @@ for p in args.pretty:
 if args.json:
     with open(args.json) as f:
         fp_lib_names = json.loads(f.read())
+        print("Reading data from {f}".format(f=args.json))
 
 else:
     fp_lib_names = {}
@@ -119,4 +120,3 @@ for l in args.libs:
     if args.real:
         with open(l, 'w') as op_file:
             op_file.write(output)
-                
