@@ -27,8 +27,13 @@ e.g.
 }
 
 """
-
 from __future__ import print_function
+
+import sys
+
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 
 import time
 import argparse
@@ -83,6 +88,8 @@ for f in args.footprints:
         footprints.append(fp)
 
 for f in footprints:
+
+    fix_model = False
 
     fp_path = os.path.abspath(f)
     fp_name = os.path.basename(f).replace('.kicad_mod', '')
@@ -151,34 +158,49 @@ for f in footprints:
 
             # Simple text substitution
             if new_name:
-                line = line.replace(fp_name, new_name)
+                try:
+                    line = line.replace(fp_name, new_name)
+                except:
+                    print("Error in line:", line)
 
             # Ensure the parent directory is correct
-            match = re.search(r"\(model (?:\${KISYS3DMOD}\/)([^\/]+)\/", line)
+            match = re.search(r"^\s*\(model (?:\${KISYS3DMOD}\/)?([^\/\\]+)", line)
 
             if match:
                 pd = match.groups()[0]
                 ki = '${KISYS3DMOD}'
 
-                if not ki in line:
-                    line = line.replace(pd, ki + '/' + pd)
+                # Enforce correct separators
+                if line.count('\\') > 0:
                     if args.verbose > 1:
-                        print("Adding " + ki + " prefix")
+                        print("Replacing \\ with / in 3D model path")
+                        line = line.replace('\\', '/')
+
+                new_dir = model_parent_dir
+
+                if not ki in line:
+                    new_dir = ki + '/' + new_dir
 
                 if not pd == model_parent_dir:
                     if args.verbose > 1:
-                        print("Fixing 3D model directory:", pd, '->', model_parent_dir)
-                    line = line.replace(pd, model_parent_dir)
+                        print("Fixing 3D model directory:", pd, '->', new_dir)
+                    line = line.replace(pd, new_dir)
+                    fix_model = True
 
             output += line
 
-        if args.real and new_name:
-            new_file = os.path.join(fp_dir, new_name + ".kicad_mod")
+        if args.real and (new_name or fix_model):
+
+            if new_name:
+                new_file = os.path.join(fp_dir, new_name + ".kicad_mod")
+            else:
+                new_file = fp_path
 
             # Write new file
             with open(new_file, 'w') as f:
                 f.write(output)
 
-            # Delete old file
-            os.remove(fp_path)
+            if new_name:
+                # Delete old file
+                os.remove(fp_path)
 
