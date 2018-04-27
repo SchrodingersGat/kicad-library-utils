@@ -133,7 +133,7 @@ class SymbolField:
     def __str__(self):
         # Fn "value" X Y Size H V C CNN "name"
         # (name only for n >3)
-        return 'F{idx:d} "{value:s}" {at:s} {size:d} {orientation:s} {visiblility:s} {allign_h:s} {allign_v:s}{style:s}{weight:s}{name:s}\n'.format(
+        return 'F{idx:d} "{value:s}" {at:s} {size:d} {orientation:s} {visiblility:s} {allign_v:s} {allign_h:s}{style:s}{weight:s}{name:s}\n'.format(
             name = '' if self.idx < 4 else ' "{name}"'.format(name = self.name),
             idx = self.idx, value = self.value, at = self.at,
             size = self.fontsize, weight = self.fontweight, style = self.fontstyle,
@@ -263,7 +263,7 @@ class Symbol:
         lowest_user_field_idx += 1
 
     def addAlias(self, alias_name, dcm_options={}):
-        self.used_names_in_lib.add(alias_name)
+        self.used_names_in_lib.addName(alias_name)
         self.aliases[alias_name] = DcmEntry(name = alias_name, **dcm_options)
 
     def addFootprintFilter(self, filter):
@@ -302,7 +302,7 @@ class Symbol:
     def generateDcmContent(self):
         content = ''
         content += str(self.dcm_entry)
-        content += ''.join(map(str, self.aliases))
+        content += ''.join(map(str, self.aliases.values()))
         return content
 
     def __str__(self):

@@ -99,7 +99,7 @@ class KicadMod(object):
         self.autoplace_cost180 = self._getValue('autoplace_cost180', 0, 2)
 
         # global footprint clearance settings
-        self.clearance = self._getValue('clearance', 0)
+        self.clearance = self._getValue('clearance', 0, 2)
         self.solder_mask_margin = self._getValue('solder_mask_margin', 0, 2)
         self.solder_paste_margin = self._getValue('solder_paste_margin', 0, 2)
         self.solder_paste_ratio = self._getValue('solder_paste_ratio', 0, 2)
@@ -145,14 +145,15 @@ class KicadMod(object):
     def _getArray(self, data, value, result=None, level=0, max_level = None):
         if result is None: result = []
 
-        level += 1
-
         if max_level is not None and max_level <= level:
             return result
 
+        level += 1
+
         for i in data:
             if type(i) == type([]):
-                self._getArray(i, value, result, level=level)
+                self._getArray(i, value, result, level=level,
+                        max_level=max_level)
             else:
                 if i == value:
                     result.append(data)
@@ -430,7 +431,10 @@ class KicadMod(object):
             model_dict = {'file':model[1]}
 
             # position
-            xyz = self._getArray(self._getArray(model, 'at'), 'xyz')[0]
+            offset = self._getArray(model, 'at')
+            if len(offset) < 1:
+                offset = self._getArray(model, 'offset')
+            xyz = self._getArray(offset, 'xyz')[0]
             model_dict['pos'] = {'x':xyz[1], 'y':xyz[2], 'z':xyz[3]}
 
             # scale
